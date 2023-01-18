@@ -1,16 +1,39 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+import os.path
+import shutil
+from telegram.ext import Updater, CommandHandler, MessageHandler, TypeHandler
+from bot import *
 
 
-# Press the green button in the gutter to run the script.
+def prepare_dirs():
+    if os.path.exists('chats'):
+        shutil.rmtree('chats')
+    os.mkdir('chats')
+
+
+def main() -> None:
+    prepare_dirs()
+    with open('token.txt') as f:
+        token = f.read().strip()
+    updater = Updater(token)
+
+    updater.dispatcher.add_handler(CommandHandler("start", start_command))
+    updater.dispatcher.add_handler(CommandHandler("help", help_command))
+    # updater.dispatcher.add_handler(CommandHandler("size128", partial(set_image_size, size=128)))
+    # updater.dispatcher.add_handler(CommandHandler("size256", partial(set_image_size, size=256)))
+    # updater.dispatcher.add_handler(CommandHandler("size512", partial(set_image_size, size=512)))
+    updater.dispatcher.add_handler(MessageHandler(
+        (
+            (check_caption('style') | check_caption('content')) &
+            Filters.photo
+        ),
+        image_handler
+    ))
+    updater.dispatcher.add_handler(TypeHandler(Update, unknown_message_format))
+
+    updater.start_polling()
+    print('Bot started')
+    updater.idle()
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    main()
