@@ -38,9 +38,10 @@ def image_handler(update: Update, context: CallbackContext):
 
     if os.path.isfile(directory + '/style.jpg') & os.path.isfile(directory + '/content.jpg'):
         update.message.reply_text(f"Stylizing...")
-        stylized_img = style_transfer(directory)
-        pil_stylized_img = tt.ToPILImage()(stylized_img)
-        pil_stylized_img.save(directory + '/stylized.jpg')
+        style_transfer(directory)
+        # stylized_img = style_transfer(directory)
+        # pil_stylized_img = tt.ToPILImage()(stylized_img)
+        # pil_stylized_img.save(directory + '/stylized.jpg')
         context.bot.send_photo(
             update.message.chat.id,
             photo=open(directory + '/stylized.jpg', 'rb')
