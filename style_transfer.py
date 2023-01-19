@@ -10,7 +10,7 @@ import os
 from tqdm import tqdm, trange
 
 
-IMAGE_SIZE = 128
+IMAGE_SIZE = 512
 NORM_STATS = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 cnn = models.vgg19(pretrained=True).features.to(device).eval()
