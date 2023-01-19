@@ -18,6 +18,7 @@ def main() -> None:
 
     updater.dispatcher.add_handler(CommandHandler("start", start_command))
     updater.dispatcher.add_handler(CommandHandler("help", help_command))
+    updater.dispatcher.add_handler(CommandHandler("gif", gif_command))
     # updater.dispatcher.add_handler(CommandHandler("size128", partial(set_image_size, size=128)))
     # updater.dispatcher.add_handler(CommandHandler("size256", partial(set_image_size, size=256)))
     # updater.dispatcher.add_handler(CommandHandler("size512", partial(set_image_size, size=512)))

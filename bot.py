@@ -5,6 +5,7 @@ from telegram import Update
 from telegram.ext import CallbackContext, Filters, BaseFilter
 import torchvision.transforms as tt
 from style_transfer import style_transfer
+from make_gif import *
 
 
 def start_command(update: Update, context: CallbackContext):
@@ -22,38 +23,63 @@ def help_command(update: Update, context: CallbackContext):
     update.message.reply_text(help_text)
 
 
+def gif_command(update: Update, context: CallbackContext):
+    path = f'chats/{update.message.chat.id}/process.gif'
+    if os.path.isfile(path):
+        update.message.reply_text('Here\'s process of stylizing your image')
+        with open(path, 'rb') as gif:
+            context.bot.send_animation(update.message.chat.id, gif)
+    else:
+        update.message.reply_text('I don\'t have any gif for you, please, make sure, '\
+                                  'that you send me "style" and "content" images')
+
+
 def image_handler(update: Update, context: CallbackContext):
     file = update.message.photo[-1].file_id
 
     chat_id = update.message.chat.id
-    directory = f'chats/{chat_id}'
+    directory = f'chats/{chat_id}/'
     if not os.path.exists(directory):
         os.mkdir(directory)
 
     message = update.message.caption.lower()
     obj = context.bot.get_file(file)
-    obj.download(directory + f'/{message}.jpg')
+    obj.download(directory + f'{message}.jpg')
     update.message.reply_text(f"Image {message} received")
     print(f"Image {message} received")
 
-    if os.path.isfile(directory + '/style.jpg') & os.path.isfile(directory + '/content.jpg'):
+    if os.path.isfile(directory + 'style.jpg') & os.path.isfile(directory + 'content.jpg'):
         update.message.reply_text(f"Stylizing...")
-        stylized_img = style_transfer(directory)
+
+        process_dir = directory+'process/'
+        stylized_img = style_transfer(
+            directory,
+            content='content.jpg',
+            style='style.jpg',
+            process_dir=process_dir,
+            num_steps=5,
+            log_steps=1
+        )
+
         pil_stylized_img = tt.ToPILImage()(stylized_img)
-        pil_stylized_img.save(directory + '/stylized.jpg')
+        pil_stylized_img.save(directory + 'stylized.jpg')
         context.bot.send_photo(
             update.message.chat.id,
-            photo=open(directory + '/stylized.jpg', 'rb')
+            photo=open(directory + 'stylized.jpg', 'rb')
         )
-        os.remove(directory + '/content.jpg')
-        os.remove(directory + '/style.jpg')
+        os.remove(directory + 'content.jpg')
+        os.remove(directory + 'style.jpg')
 
-
-# def set_image_size(update: Update, context: CallbackContext, size=512):
-#     update.message.reply_text(f"Image size set to {size}")
-#     print(f"Image size set to {size}")
-#     IMAGE_SIZE = size
-#     print(f'Image size after changing {IMAGE_SIZE}')
+        images_to_gif(
+            fname=directory+'process',
+            all_filenames=os.listdir(process_dir),
+            preffix=process_dir,
+            dur_per_frame=40,
+            suffix='',
+            add_text=True,
+            sort=True
+        )
+        delete_files(os.listdir(process_dir), process_dir)
 
 
 def check_caption(s) -> BaseFilter:

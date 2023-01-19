@@ -5,6 +5,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
+import shutil
+import os
+from tqdm import tqdm, trange
 
 
 IMAGE_SIZE = 128
@@ -138,9 +141,10 @@ def get_input_optimizer(input_img):
 
 def run_style_transfer(cnn, normalization_mean, normalization_std,
                        content_img, style_img, input_img, num_steps=300,
-                       style_weight=1000000, content_weight=1):
+                       style_weight=1000000, content_weight=1, size=[512,512],
+                       process_dir=None, log_steps=50):
     """Run the style transfer."""
-    print('Building the style transfer model..')
+    # print('Building the style transfer model..')
     model, style_losses, content_losses = get_style_model_and_losses(cnn,
         normalization_mean, normalization_std, style_img, content_img)
 
@@ -149,11 +153,17 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
     input_img.requires_grad_(True)
     model.requires_grad_(False)
 
+    if process_dir is not None:
+        with torch.no_grad():
+            tmp = input_img.detach().clamp(0, 1)
+            tmp_img = tt.CenterCrop(size)(tmp[0])
+            pil_stylized_img = tt.ToPILImage()(tmp_img)
+            pil_stylized_img.save(process_dir + f'{0}.jpg')
+
     optimizer = get_input_optimizer(input_img)
 
-    print('Optimizing..')
-    run = [0]
-    while run[0] <= num_steps:
+    # print('Optimizing..')
+    for i in trange(num_steps):
 
         def closure():
             # correct the values of updated input image
@@ -176,16 +186,17 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
             loss = style_score + content_score
             loss.backward()
 
-            run[0] += 1
-            if run[0] % 50 == 0:
-                print("run {}:".format(run))
-                print('Style Loss : {:4f} Content Loss: {:4f}'.format(
-                    style_score.item(), content_score.item()))
-                print()
-
             return style_score + content_score
 
         optimizer.step(closure)
+
+        if i % log_steps == 0:
+            if process_dir is not None:
+                with torch.no_grad():
+                    tmp = input_img.detach().clamp(0, 1)
+                    tmp_img = tt.CenterCrop(size)(tmp[0])
+                    pil_stylized_img = tt.ToPILImage()(tmp_img)
+                    pil_stylized_img.save(process_dir + f'{i+1}.jpg')
 
     # a last correction...
     with torch.no_grad():
@@ -203,16 +214,21 @@ class SquarePad:
         return tt.Pad(padding, 0, 'constant')(image)
 
 
-def style_transfer(directory):
-    content_pil = Image.open(directory+'/content.jpg')
-    style_pil = Image.open(directory+'/style.jpg')
+def style_transfer(directory, content, style, process_dir=None, num_steps=20, log_steps=2):
+    if process_dir is not None:
+        if os.path.exists(process_dir):
+            shutil.rmtree(process_dir)
+        os.mkdir(process_dir)
+    content_pil = Image.open(directory+content)
+    style_pil = Image.open(directory+style)
     content_size = content_pil.size
     cur_size = max(content_size)
 
-    print(f'Image size before stylizing {IMAGE_SIZE}')
+    #
+    # print(f'Image size before stylizing {IMAGE_SIZE}')
     ratio = IMAGE_SIZE / cur_size
     new_size = (int(content_size[1] * ratio), int(content_size[0] * ratio))
-    print(f'New size is {new_size}')
+    # print(f'New size is {new_size}')
     transforms = tt.Compose([
                     tt.Resize(new_size),
                     SquarePad(),
@@ -228,6 +244,10 @@ def style_transfer(directory):
         NORM_STATS[1],
         content_img,
         style_img,
-        input_img
+        input_img,
+        size=new_size,
+        process_dir=process_dir,
+        log_steps=log_steps,
+        num_steps=num_steps
     )
     return tt.CenterCrop(new_size)(output[0])
