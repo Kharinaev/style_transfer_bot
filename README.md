@@ -8,11 +8,11 @@ Current bot written in `python-telegram-bot` framework. It uses [PyTorch](https:
 
 Bot can recieve two images (style and content) and perform style transferring from one to another.   
 Example:  
-
+![Alt text](style_transfer_example.jpg?raw=true "Title")
 
 It also can show you a process of stylizing with gif.  
 Example:  
-
+![Alt text](process.gif?raw=true)
 
 
 
