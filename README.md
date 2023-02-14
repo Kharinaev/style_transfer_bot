@@ -3,7 +3,7 @@ Telegram bot that allows you to transfer style from one image to another
 
 ## Description
 
-Current bot written in `python-telegram-bot` framework. It uses [PyTorch](https://pytorch.org/tutorials/advanced/neural_style_tutorial.html) implementation of [Neural Style Tranferring Algorithm](https://arxiv.org/abs/1508.06576) developed by Leon A. Gatys, Alexander S. Ecker and Matthias Bethge.
+Current bot written in `python-telegram-bot` framework. It uses [PyTorch](https://pytorch.org/tutorials/advanced/neural_style_tutorial.html) implementation of [Neural Style Transferring Algorithm](https://arxiv.org/abs/1508.06576) developed by Leon A. Gatys, Alexander S. Ecker and Matthias Bethge.
 
 
 Bot can recieve two images (style and content) and perform style transferring from one to another.   
