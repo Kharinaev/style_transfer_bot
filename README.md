@@ -14,7 +14,7 @@ It also can show you a process of stylizing with gif.
 Example:  
 ![Alt text](process.gif?raw=true)
 
-Video [demonstration](https://youtu.be/GSGpM4rFNuw)
+Video demonstration: [here](https://youtu.be/GSGpM4rFNuw)
 
 
 ## Setup
